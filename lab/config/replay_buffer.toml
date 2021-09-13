@@ -1,0 +1,7 @@
+buffer_size = 1000000
+
+[transition_relabeling]
+
+    [transition_relabeling.her]  # Hindsight experience replay
+        strategy = false  # Choice of ['future', 'episode']
+        fraction = 0.0  # Fraction of transitions to relabel
