@@ -1,6 +1,6 @@
 # Notes
 
-## Convolution
+## Convolutional NNs
 
 - convolution layer: extract features using kernel/filter
 - `stride`: number of pixels for kernel shift
@@ -63,3 +63,54 @@ Output size according to PyTorch docs: $W_{out} = \lfloor \frac{W_{in} + 2P - D*
 - after fourth layer: 256 channels of 2x2
   - $W_{out} = \lfloor \frac{6 + 2*0 - 1*(4-1) -1 }{2} +1 \rfloor = \lfloor \frac{6-3-1}{2}+1 \rfloor = \lfloor \frac{2}{2}+1 \rfloor = 2$
 - fully connected: input 256x2x2 = 1024
+
+## Recurrent NNs
+
+### LSTM
+
+- can process sequences of data
+- LSTM unit is composed of cell, input gate, output gate, forget gate
+  - cell remembers values
+  - gates regulate information flow into and out of cell
+
+#### PyTorch
+
+structure: `nn.LSTM` + `nn.Linear` (`nn.LSTM` is a multi-ayer LSTM RNN)
+
+For each element in input sequence, compute:
+
+- $h_t, h_{t-1}$: hidden states
+- $c_t$: cell state
+- $x_t$: input
+  - $x_t^{(l)} = h_t^{(l-1)} \cdot \delta_t^{(l-1)}$
+  - $\delta_t^{(l-1)}$: dropout Bernoulli RV
+- $i_t$: input gates
+- $f_t$: forget gates
+- $g_t$: cell gates
+- $o_t$: output gates
+
+Parameters:
+
+- `input_size`
+- `hidden_size`: number of features in hidden state
+- `num_layers`: number of recurrent layers, default 1
+- `dropout`: dropout probability, default 0
+
+Inputs:
+
+- `input`: tensor of shape $(L, N, H_{in})$
+  - $L$: sequence length
+  - $N$: batch size
+  - $H_{in}$: `input_size`
+- `(h_0, c_0)`: initial hidden state, initial cell state
+  - for each element in the batch
+  - defaults to zeros
+
+Outputs:
+
+- `output`
+- `(h_n, c_n)`: final hidden state and cell state
+
+### GRU
+
+Similar to LSTM with forget gate, fewer parameters, no output gate.
