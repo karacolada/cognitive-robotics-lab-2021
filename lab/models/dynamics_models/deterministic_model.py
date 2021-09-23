@@ -11,7 +11,7 @@ class DeterministicModel(LatentDynamicsModel):
 
     def _enc(self, observation):
         """e_t = enc(o_t)"""
-        return self.encoder.forward(observation)
+        return self.encoder(observation)
 
     def _prior(self, prev_state, prev_action):
         """s_t ~ p(s_t | s_t-1, a_t-1)"""
@@ -24,4 +24,4 @@ class DeterministicModel(LatentDynamicsModel):
 
     def dec(self, state):
         """o_t ~ p(o_t | s_t)"""
-        return self.decoder.forward(state)
+        return self.decoder(state)
