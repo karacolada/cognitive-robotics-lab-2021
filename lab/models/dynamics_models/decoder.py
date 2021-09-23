@@ -34,6 +34,6 @@ class ImageDecoder(nn.Module):
     
     def forward(self, state):
         hidden = self.prep(state)
-        hidden = hidden.view(-1, 256, 1, 1)
+        hidden = hidden.view(-1, hidden.shape[1], 1, 1)
         observation = self.deconv_relu_stack(hidden)
         return observation
