@@ -19,4 +19,22 @@ class VectorEncoder(nn.Module):
         return embedded
 
 class ImageEncoder(nn.Module):
-    pass
+    def __init__(self, embedded_size):
+        super(ImageEncoder, self).__init__()
+        # assuming input of 64x64
+        self.conv_relu_stack = nn.Sequential(
+            nn.Conv2d(3, 32, 4, 2),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, 4, 2),
+            nn.ReLU(),
+            nn.Conv2d(64, 128, 4, 2),
+            nn.ReLU(),
+            nn.Conv2d(128, 256, 4, 2),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(1024, embedded_size)
+        )
+    
+    def forward(self, observation):
+        embedded = self.conv_relu_stack(observation)
+        return embedded
