@@ -1,5 +1,13 @@
 from torch import nn
 
+def Encoder(type, **kwargs):
+    if type == "vector":
+        return VectorEncoder(**kwargs)
+    elif type == "image":
+        return ImageEncoder(**kwargs)
+    else:
+        raise ValueError("Type must be image or vector.")
+
 class VectorEncoder(nn.Module):
     # learn to embed observation
     def __init__(self, observation_size, embedded_size):

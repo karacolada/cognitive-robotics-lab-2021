@@ -1,5 +1,13 @@
 from torch import nn
 
+def Decoder(type, **kwargs):
+    if type == "vector":
+        return VectorDecoder(**kwargs)
+    elif type == "image":
+        return ImageDecoder(**kwargs)
+    else:
+        raise ValueError("Type must be image or vector.")
+
 class VectorDecoder(nn.Module):
     # reconstruct observation from state
     def __init__(self, observation_size, state_size):

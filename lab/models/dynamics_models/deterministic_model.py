@@ -1,19 +1,13 @@
-from lab.models.dynamics_models.encoder import VectorEncoder, ImageEncoder
-from lab.models.dynamics_models.decoder import VectorDecoder, ImageDecoder
+from lab.models.dynamics_models.encoder import Encoder
+from lab.models.dynamics_models.decoder import Decoder
 from lab.models.dynamics_models.latent_dynamics_model import LatentDynamicsModel
 
 
 class DeterministicModel(LatentDynamicsModel):
-    def __init__(self, type, observation_size, embedded_size, state_size):
+    def __init__(self, type, **kwargs):
         super().__init__()
-        if type == "vector":
-            self.encoder = VectorEncoder(observation_size, embedded_size)
-            self.decoder = VectorDecoder(observation_size, state_size)
-        elif type == "image":
-            self.encoder = ImageEncoder(observation_size, embedded_size)
-            self.decoder = ImageDecoder(observation_size, state_size)
-        else:
-            raise ValueError("Type must be image or vector.")
+        self.encoder = Encoder(type, **kwargs)
+        self.decoder = Decoder(type, **kwargs)
 
     def _enc(self, observation):
         """e_t = enc(o_t)"""
