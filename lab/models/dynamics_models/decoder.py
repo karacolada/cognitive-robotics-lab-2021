@@ -10,15 +10,17 @@ def Decoder(type, **kwargs):
 
 class VectorDecoder(nn.Module):
     # reconstruct observation from state
-    def __init__(self, observation_size, state_size):
+    def __init__(self, observation_size, state_size, hidden_size=None):
         super(VectorDecoder, self).__init__()
         self.flatten = nn.Flatten
+        if hidden_size is None:
+            hidden_size = observation_size
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(state_size, observation_size),
+            nn.Linear(state_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(observation_size, observation_size),
+            nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(observation_size, observation_size)
+            nn.Linear(hidden_size, observation_size)
         )
     
     def forward(self, state):

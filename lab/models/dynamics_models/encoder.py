@@ -10,15 +10,17 @@ def Encoder(type, **kwargs):
 
 class VectorEncoder(nn.Module):
     # learn to embed observation
-    def __init__(self, observation_size, embedded_size):
+    def __init__(self, observation_size, embedded_size, hidden_size=None):
         super(VectorEncoder, self).__init__()
         self.flatten = nn.Flatten
+        if hidden_size is None:
+            hidden_size = embedded_size
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(observation_size, embedded_size),
+            nn.Linear(observation_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(embedded_size, embedded_size),
+            nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(embedded_size, embedded_size)
+            nn.Linear(hidden_size, embedded_size)
         )
     
     def forward(self, observation):
