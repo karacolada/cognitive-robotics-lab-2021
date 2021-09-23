@@ -1,4 +1,5 @@
-from lab.models.dynamics_models.encoder import Encoder, ImageEncoder
+from lab.models.dynamics_models.encoder import VectorEncoder, ImageEncoder
+from lab.models.dynamics_models.decoder import VectorDecoder, ImageDecoder
 from lab.models.dynamics_models.latent_dynamics_model import LatentDynamicsModel
 
 
