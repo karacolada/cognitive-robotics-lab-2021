@@ -29,4 +29,4 @@ class DeterministicModel(LatentDynamicsModel):
 
     def dec(self, state):
         """o_t ~ p(o_t | s_t)"""
-        raise NotImplementedError
+        return self.decoder.forward(state)
