@@ -1,10 +1,10 @@
 from torch import nn
 
-def Encoder(type, **kwargs):
+def Encoder(type, observation_size, embedded_size, hidden_size=None):
     if type == "vector":
-        return VectorEncoder(**kwargs)
+        return VectorEncoder(observation_size, embedded_size, hidden_size)
     elif type == "image":
-        return ImageEncoder(**kwargs)
+        return ImageEncoder(embedded_size)
     else:
         raise ValueError("Type must be image or vector.")
 

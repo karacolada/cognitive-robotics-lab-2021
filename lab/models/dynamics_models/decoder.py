@@ -1,10 +1,10 @@
 from torch import nn
 
-def Decoder(type, **kwargs):
+def Decoder(type, observation_size, state_size, hidden_size=None):
     if type == "vector":
-        return VectorDecoder(**kwargs)
+        return VectorDecoder(observation_size, state_size, hidden_size)
     elif type == "image":
-        return ImageDecoder(**kwargs)
+        return ImageDecoder(state_size)
     else:
         raise ValueError("Type must be image or vector.")
 
