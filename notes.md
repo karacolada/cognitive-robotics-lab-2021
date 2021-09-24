@@ -72,6 +72,34 @@ Output size according to PyTorch docs: $W_{out} = \lfloor \frac{W_{in} + 2P - D*
 - LSTM unit is composed of cell, input gate, output gate, forget gate
   - cell remembers values
   - gates regulate information flow into and out of cell
+- cell state encodes aggregation of data from all previous time steps
+  - entire data so far
+  - input data is filtered through input and forget gate, result of both is incorporated into cell state
+  - gate weights extract features
+  - forget weights: determine which time-steps are important or not
+  - input weights: how to encode info into cell state
+- hidden state encodes characterisation of previous time step's data
+  - more concerned with the most recent timestep (not all)
+  - can mean different things depending on the task
+- two normallising functions: sigmoid and tanh
+  - sigmoid: trying to calculate set of scalars by which to multiply something else
+    - amplify/diminish
+    - between 0 and 1
+  - tanh: trying to transform data into normalised encoding of data
+    - between -1 and 1
+- gates use sigmoid functions, each followed by multiplication operation
+  - example: forget gate outputs matrix of values close to 1
+    - based on current input, the timeseries history is very important
+    - cell continues to retain most of its original value
+- "candidate gate": tanh
+  - same matrix operations as in input gate (sigmoid)
+  - output is encoded, normalised version of hidden state combined with current input
+  - output is multiplied with input-gate output
+  - does a bit of feature extraction
+  - idea: presence of certain features can deem the current state important or unimportant
+    - scaled by sigmoid based on what the data looks like before being added to the cell state ("remember-worthiness")
+- output gate uses encoding and scaling to get incorporated into cell state and form output hidden state (can be used for prediction or fed back into LSTM)
+- stacking LSTM layers: use hidden states as input to the next layer
 
 #### PyTorch
 
