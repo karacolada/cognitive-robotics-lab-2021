@@ -66,6 +66,8 @@ Output size according to PyTorch docs: $W_{out} = \lfloor \frac{W_{in} + 2P - D*
 
 ## Recurrent NNs
 
+Similar to LSTM, only without passing on the internal cell state (not only the hidden state).
+
 ### LSTM
 
 - can process sequences of data
@@ -141,4 +143,6 @@ Outputs:
 
 ### GRU
 
-Similar to LSTM with forget gate, fewer parameters, no output gate.
+Similar to LSTM with forget gate, fewer parameters, no output gate. Does not maintain internal cell state, that info is incorporated in hidden state and then passed on to the next unit.
+
+Gates: Update (=Output), Reset (=Forget+Input), Current Memory (sub-part of reset gate)
