@@ -1,0 +1,53 @@
+import torch
+from torch import nn
+from lab.models.dynamics_models.latent_dynamics_model import LatentDynamicsModel
+from lab.models.dynamics_models.encoder import Encoder
+from lab.models.dynamics_models.decoder import Decoder
+
+
+class StochasticModel(LatentDynamicsModel):
+    def __init__(self, type, min_stddev, state_size, action_size, **kwargs):
+        super().__init__()
+        self.encoder = Encoder(type, **kwargs)
+        self.decoder = Decoder(type, **kwargs)
+        self.prior_model = StochasticPrior(min_stddev, state_size, action_size)
+
+    def _enc(self, observation):
+        """e_t = enc(o_t)"""
+        return self.encoder(observation)
+
+    def _prior(self, prev_state, prev_action):
+        """s_t ~ p(s_t | s_t-1, a_t-1)"""
+        mean, stddev = self.prior_model(prev_state, prev_action)
+        state = torch.normal(mean, stddev)
+        return state
+
+    def _posterior(self, prev_state, prev_action, emb_observation):
+        """s_t ~ q(s_t | s_t-1, a_t-1, e_t)"""
+        raise NotImplementedError
+
+    def dec(self, state):
+        """o_t ~ p(o_t | s_t)"""
+        return self.decoder(state)
+
+class StochasticPrior(nn.Module):
+    def __init__(self, min_stddev, state_size, action_size, hidden_size=None):
+        super().__init__()
+        if hidden_size is None:
+            hidden_size = 2*state_size
+        self.input_size = state_size + action_size
+        self.min_stddev = min_stddev
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(self.input_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, 2*state_size)
+        )
+    
+    def forward(self, state, action):
+        input = torch.cat((state, action))
+        output = self.linear_relu_stack(input)
+        mean, stddev = output.chunk(2, dim=-1)
+        stddev = nn.functional.softplus(stddev) + self.min_stddev
+        return mean, stddev
