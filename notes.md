@@ -167,7 +167,7 @@ Reduction in Kaixhin:
 - sum over observation size
 - mean over batch and timesteps
 
-Hat dann jedes Batchelement mehrere timesteps???
+**Frage:** Hat dann jedes Batchelement mehrere timesteps???
 
 idea:
 ```py
@@ -180,6 +180,8 @@ loss_fn = nn.MSELoss()  # reduction='none', 'mean' (sum of output divided by no.
 
 observational_loss = loss_fn(model._dec(posterior_state), observation)
 ```
+
+**Frage:** Wo ist das alles im Paper/in der Originalimplementierung?
 
 ### KL loss
 
@@ -213,4 +215,4 @@ $$\text{KL} [q(s_t \mid o_{\leq t}, a_{< t}) || p(s_t \mid s_{t-1}, a_{t-1}) ]$$
 with
 $$q(s_t \mid o_{\leq t}, a_{< t}) = \prod_i^t q(s_i \mid s_{i-1}, a_{i-1}, o_i)$$
 
-Is this not relevant bc. the NN just learns it this way anyways?
+**Frage:** Is this not relevant bc. the NN just learns it this way anyways?
