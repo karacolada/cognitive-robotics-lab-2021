@@ -1,5 +1,6 @@
 from lab import Agent
 from lab.models.planners.cross_entropy_method import CEMPlanner
+from lab.models.dynamics_models.stochastic_model import StochasticModel
 import numpy as np
 import torch
 from torch import Tensor
@@ -30,15 +31,17 @@ class PlaNet(Agent):
         self.env_spaces = env_spaces
 
         if self.latent_dynamics_model == "rssm":
-            self.dynamics_model = # TODO: Your latent dynamics model here
+            #self.dynamics_model = # TODO: Your latent dynamics model here
+            raise NotImplementedError
         elif self.latent_dynamics_model == "ssm":
-            self.dynamics_model = # TODO: Your latent dynamics model here
+            self.dynamics_model = StochasticModel(type, min_stddev, state_size, action_size, observation_size, embedded_size, hidden_size)  # TODO: args
         elif self.latent_dynamics_model == "rnn":
-            self.dynamics_model = # TODO: Your latent dynamics model here
+            #self.dynamics_model = # TODO: Your latent dynamics model here
+            raise NotImplementedError
         else:
             assert False
 
-        self.reward_model =  # TODO: Your reward model here
+        self.reward_model = None # TODO: Your reward model here
 
         self.planner = CEMPlanner(env_spaces["action_size"], self.planning_horizon, self.optimization_iters,
                                   self.candidates, self.top_candidates, self.dynamics_model, self.reward_model)
