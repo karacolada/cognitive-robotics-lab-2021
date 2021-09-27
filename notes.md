@@ -160,6 +160,15 @@ Kaixhin/PlaNet:
 F.mse_loss(bottle(observation_model, (beliefs, posterior_states)), observations[1:], reduction='none').sum(dim=2 if args.symbolic_env else (2, 3, 4)).mean(dim=(0, 1))
 ```
 
+Reduction in Kaixhin:
+
+- input shape `(batch_size, timesteps, observation_size)`
+- loss resulting w/o reduction has same shape as input
+- sum over observation size
+- mean over batch and timesteps
+
+Hat dann jedes Batchelement mehrere timesteps???
+
 idea:
 ```py
 from torch import nn
