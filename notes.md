@@ -188,7 +188,7 @@ kl_loss = kl_divergence(p, q)
 
 Original PlaNet:
 
-$$ loss = KL[prior || post] $$
+$$ loss = \text{KL}[prior || post] $$
 
 with freenats (allowed deviation):
 
@@ -196,4 +196,12 @@ $$ loss = \max(0, loss - freenats) $$
 
 Kaixhin PlaNet:
 
-$$ loss = mean\left(\max\left(\sum KL(post || prior), freenats\right)\right)$$
+$$ loss = mean\left(\max\left(\sum \text{KL}(post || prior), freenats\right)\right)$$
+
+#### Paper
+
+$$\text{KL} [q(s_t \mid o_{\leq t}, a_{< t}) || p(s_t \mid s_{t-1}, a_{t-1}) ]$$
+with
+$$q(s_t \mid o_{\leq t}, a_{< t}) = \prod_i^t q(s_i \mid s_{i-1}, a_{i-1}, o_i)$$
+
+Is this not relevant bc. the NN just learns it this way anyways?
