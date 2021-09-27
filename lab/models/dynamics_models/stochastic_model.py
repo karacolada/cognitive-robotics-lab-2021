@@ -6,10 +6,10 @@ from lab.models.dynamics_models.decoder import Decoder
 
 
 class StochasticModel(LatentDynamicsModel):
-    def __init__(self, type, min_stddev, state_size, action_size, embedded_size, hidden_size, **kwargs):
+    def __init__(self, type, min_stddev, state_size, action_size, observation_size, embedded_size, hidden_size):
         super().__init__()
-        self.encoder = Encoder(type, **kwargs)
-        self.decoder = Decoder(type, **kwargs)
+        self.encoder = Encoder(type, observation_size, embedded_size)
+        self.decoder = Decoder(type, observation_size, state_size, hidden_size)
         self.prior_model = StochasticPrior(min_stddev, state_size, action_size, hidden_size)
         self.posterior_model = StochasticPosterior(min_stddev, state_size, embedded_size, hidden_size)
 
