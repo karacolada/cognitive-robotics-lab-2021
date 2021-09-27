@@ -2,3 +2,4 @@ experiments/
 cognitive_robotics_lab.egg-info/
 __pycache__/
 .vscode/
+*.html
