@@ -68,9 +68,37 @@ class PlaNet(Agent):
     def configure_sampling_args(self):
         return {"batch_size": self.batch_size, "sequence_len": self.chunk_size}
 
+    def observation_loss(self, type, gt_observations, post_state_seq):
+        loss_fn = nn.MSELoss(reduction='none')
+        if type=="vector":
+            loss = loss_fn(post_state_seq, gt_observations).sum(dim=2).mean()  # last dimension is observation
+        elif type=="image":
+            loss = loss_fn(post_state_seq, gt_observations).sum(dim=(2, 3, 4)).mean()  # last 3 dimensions are observation (3, 64, 64)
+        else:
+            raise ValueError("Type must be image or vector.")
+        return loss
+
+    def kl_loss(self, prior_mean, prior_stddev, posterior_mean, posterior_stddev, freenats=None):
+        prior = Normal(prior_mean, prior_stddev)
+        posterior = Normal(posterior_mean, posterior_stddev)
+        loss = kl_divergence(prior, posterior)
+        if freenats:
+            loss = torch.max(0, loss-freenats)  # TODO: test
+        return loss
+
+    def reward_loss(self, rewards, pred_rewards):
+        raise NotImplementedError
+        
     def learn_on_batch(self, batch) -> Dict:
         state_sequence = self._predict_state_sequence(batch)
-        loss =  # TODO: Your loss here
+        observation_loss = self.observation_loss(batch["observations"], state_sequence["posterior"])  # TODO: type arg
+        kl_loss = self.kl_loss()  # TODO: arguments
+        reward_loss = self.reward_loss()  # TODO: arguments
+        loss = observation_loss + kl_loss + reward_loss
+
+        losses = {"observation_loss": observation_loss.item(),
+                  "reward_loss": reward_loss.item(),
+                  "kl_loss": kl_loss.item()}
 
         self.optimizer.zero_grad()
         loss.backward()
