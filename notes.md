@@ -167,7 +167,7 @@ from torch import nn
 model = StochasticModel(*args)
 posterior_state = model(input)["state"]
 
-loss_fn = nn.MSEloss()  # reduction='none', 'mean' (sum of output divided by no. of elements, default), 'sum'
+loss_fn = nn.MSELoss()  # reduction='none', 'mean' (sum of output divided by no. of elements, default), 'sum'
 
 observational_loss = loss_fn(model._dec(posterior_state), observation)
 ```
@@ -190,7 +190,7 @@ Original PlaNet:
 
 $$ loss = KL[prior || post] $$
 
-with freenats:
+with freenats (allowed deviation):
 
 $$ loss = \max(0, loss - freenats) $$
 
