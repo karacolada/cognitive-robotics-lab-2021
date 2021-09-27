@@ -146,3 +146,54 @@ Outputs:
 Similar to LSTM with forget gate, fewer parameters, no output gate. Does not maintain internal cell state, that info is incorporated in hidden state and then passed on to the next unit.
 
 Gates: Update (=Output), Reset (=Forget+Input), Current Memory (sub-part of reset gate)
+
+## Loss function
+
+### observational loss
+
+- Vorhersage einer Zustandssequenz
+- Decoder gibt zu jedem Zustand ein Bild aus
+- Unterschied Observation - vorhergesagte observation
+
+Kaixhin/PlaNet:
+```py
+F.mse_loss(bottle(observation_model, (beliefs, posterior_states)), observations[1:], reduction='none').sum(dim=2 if args.symbolic_env else (2, 3, 4)).mean(dim=(0, 1))
+```
+
+idea:
+```py
+from torch import nn
+
+model = StochasticModel(*args)
+posterior_state = model(input)["state"]
+
+loss_fn = nn.MSEloss()  # reduction='none', 'mean' (sum of output divided by no. of elements, default), 'sum'
+
+observational_loss = loss_fn(model._dec(posterior_state), observation)
+```
+
+### KL loss
+
+- bestraft Abstand zwischen prior und posterior
+
+PyTorch KL divergence berechnen:
+
+```py
+from torch.distributions import Normal, kl_divergence
+
+p = Normal(prior_mean, prior_stddev)
+q = Normal(post_mean, post_stddev)
+kl_loss = kl_divergence(p, q)
+```
+
+Original PlaNet:
+
+$$ loss = KL[prior || post] $$
+
+with freenats:
+
+$$ loss = \max(0, loss - freenats) $$
+
+Kaixhin PlaNet:
+
+$$ loss = mean\left(\max\left(\sum KL(post || prior), freenats\right)\right)$$
