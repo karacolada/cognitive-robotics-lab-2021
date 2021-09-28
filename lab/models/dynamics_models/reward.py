@@ -14,5 +14,6 @@ class RewardModel(nn.Module):
         )
     
     def forward(self, state):
-        reward = self.linear_relu_stack(state)
+        # CAUTION: only works for stochastic state model!
+        reward = self.linear_relu_stack(state["stoch_state"])
         return reward
