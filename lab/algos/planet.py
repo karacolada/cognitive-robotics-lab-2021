@@ -46,8 +46,6 @@ class PlaNet(Agent):
         else:
             self.type = "vector"
 
-        print(self.env_spaces)
-
         if self.latent_dynamics_model == "rssm":
             #self.dynamics_model = # TODO: Your latent dynamics model here
             raise NotImplementedError
