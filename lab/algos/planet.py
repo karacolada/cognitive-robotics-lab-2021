@@ -1,3 +1,4 @@
+from torch.autograd import grad
 from lab import Agent
 from lab.models.planners.cross_entropy_method import CEMPlanner
 from lab.models.dynamics_models.stochastic_model import StochasticModel
@@ -34,6 +35,20 @@ class PlaNet(Agent):
         self.optimizer = optimizer
         self.batch_size = batch_size
         self.chunk_size = chunk_size
+        # might be needed too
+        self.action_noise = action_noise
+        self.candidates = candidates
+        self.criterion = criterion
+        self.det_state_size = det_state_size
+        self.gamma = gamma
+        self.global_kl_beta = global_kl_beta
+        self.gradient_clip_val = gradient_clip_val
+        self.optimization_iters = optimization_iters
+        self.overshooting_distance = overshooting_distance
+        self.overshooting_kl_beta = overshooting_kl_beta
+        self.overshooting_reward_scale = overshooting_reward_scale
+        self.planning_horizon = planning_horizon
+        self.top_candidates = top_candidates
 
     def initialize(self, env_spaces: Dict) -> None:
         assert env_spaces["has_continuous_actions"], "Cannot use PlaNet on environment with discrete actions."
