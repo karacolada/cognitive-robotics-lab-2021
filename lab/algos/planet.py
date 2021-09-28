@@ -1,6 +1,7 @@
 from lab import Agent
 from lab.models.planners.cross_entropy_method import CEMPlanner
 from lab.models.dynamics_models.stochastic_model import StochasticModel
+from lab.models.dynamics_models.reward import RewardModel
 import numpy as np
 import torch
 from torch import Tensor
@@ -25,23 +26,43 @@ class PlaNet(Agent):
 
         self.make_transition = ndarray_tuple("Transition", ["observation", "goal", "action", "reward", "done"])
 
+        # assign configs
+        self.stoch_state_size = stoch_state_size
+        self.network_configs = network_configs
+        self.free_nats = free_nats
+        self.latent_dynamics_model = latent_dynamics_model
+        self.optimizer = optimizer
+        self.batch_size = batch_size
+        self.chunk_size = chunk_size
+
     def initialize(self, env_spaces: Dict) -> None:
         assert env_spaces["has_continuous_actions"], "Cannot use PlaNet on environment with discrete actions."
         observation_size = env_spaces["observation_size"]
+        action_size = env_spaces["action_size"]
         self.env_spaces = env_spaces
+
+        if env_spaces["image_based"]:
+            type = "image"
+        else:
+            type = "vector"
+
+        print(self.env_spaces)
 
         if self.latent_dynamics_model == "rssm":
             #self.dynamics_model = # TODO: Your latent dynamics model here
             raise NotImplementedError
         elif self.latent_dynamics_model == "ssm":
-            self.dynamics_model = StochasticModel(type, min_stddev, state_size, action_size, observation_size, embedded_size, hidden_size)  # TODO: args
+            self.dynamics_model = StochasticModel(type, self.network_configs["min_std_dev"],
+                                                  self.stoch_state_size, action_size, observation_size,
+                                                  self.network_configs["observation_embedding_size"],
+                                                  self.network_configs["hidden_layer_sizes"])
         elif self.latent_dynamics_model == "rnn":
             #self.dynamics_model = # TODO: Your latent dynamics model here
             raise NotImplementedError
         else:
             assert False
 
-        self.reward_model = None # TODO: Your reward model here
+        self.reward_model = RewardModel(self.stoch_state_size, self.network_configs["hidden_layer_sizes"])
 
         self.planner = CEMPlanner(env_spaces["action_size"], self.planning_horizon, self.optimization_iters,
                                   self.candidates, self.top_candidates, self.dynamics_model, self.reward_model)

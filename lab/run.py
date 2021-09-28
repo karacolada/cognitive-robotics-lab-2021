@@ -5,6 +5,7 @@ from lab.utilities.cli import cli
 
 @cli(config_path="lab/config/")
 def main(cfg: Dict) -> None:
+    print(cfg)
     trainer = Trainer.from_config(cfg)
     env_fn = Env.from_config(cfg)  # env_fn/agent_fn are factory methods to create new envs/agents
     init_env = env_fn()
