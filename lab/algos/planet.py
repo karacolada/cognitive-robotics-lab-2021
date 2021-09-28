@@ -91,19 +91,15 @@ class PlaNet(Agent):
         return {"batch_size": self.batch_size, "sequence_len": self.chunk_size}
 
     def observation_loss(self, type, gt_observations, post_state_seq):
-        # get decoded observations from post_state_seq.keys()=[stoch_state, mean, stddev]
-        print("\n\nSHAPE OVERVIEW:\n")
-        print("Ground truth Obs: {}".format(gt_observations.shape))
-        decoded = None
-        print("States: {}".format(post_state_seq["stoch_state"].shape))
-        for batch_of_states in post_state_seq["stoch_state"]:
-            #if gt_observations[t] is None:
-            decoded_obs = self.dynamics_model.dec(batch_of_states).unsqueeze(0)
-            if not decoded:
-                decoded = decoded_obs
-            else:
-                decoded = torch.cat((decoded, decoded_obs))
-        print("Decoded Obs: {}\n\n".format(decoded.shape))
+        """Decode observations from post_state_seq.keys()=[stoch_state, mean, stddev], then compute loss"""
+        # only t-1 states available, observations from [1]
+        gt_observations = gt_observations[1:]
+        # squeeze batch+timesteps
+        states = post_state_seq["stoch_state"].view(-1, self.stoch_state_size)
+        # get decoded observations
+        decoded = self.dynamics_model.dec(states)
+        # back to true dimensions
+        decoded = decoded.view(gt_observations.shape)
         # calculate loss
         loss_fn = nn.MSELoss(reduction='none')
         if type=="vector":
@@ -136,6 +132,8 @@ class PlaNet(Agent):
         state_sequence = self._predict_state_sequence(batch)
         observations, goals, actions, rewards, dones = batch
         observation_loss = self.observation_loss(self.type, observations, state_sequence["posterior"])
+
+
         kl_loss = self.kl_loss()  # TODO: arguments
         reward_loss = self.reward_loss(batch["rewards"], state_sequence["posterior"])
         loss = observation_loss + kl_loss + reward_loss
@@ -146,6 +144,7 @@ class PlaNet(Agent):
 
         self.optimizer.zero_grad()
         loss.backward()
+        # normalise gradients (might log results)
         total_grad_norm = nn.utils.clip_grad_norm_(self.parameters(), self.gradient_clip_val, norm_type=2)
         self.optimizer.step()
 
