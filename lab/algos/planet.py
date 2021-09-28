@@ -93,11 +93,25 @@ class PlaNet(Agent):
         return {"batch_size": self.batch_size, "sequence_len": self.chunk_size}
 
     def observation_loss(self, type, gt_observations, post_state_seq):
+        # get decoded observations from post_state_seq.keys()=[stoch_state, mean, stddev]
+        print("\n\nSHAPE OVERVIEW:\n")
+        print("Ground truth Obs: {}".format(gt_observations.shape))
+        decoded = None
+        print("States: {}".format(post_state_seq["stoch_state"].shape))
+        for batch_of_states in post_state_seq["stoch_state"]:
+            #if gt_observations[t] is None:
+            decoded_obs = self.dynamics_model.dec(batch_of_states).unsqueeze(0)
+            if not decoded:
+                decoded = decoded_obs
+            else:
+                decoded = torch.cat((decoded, decoded_obs))
+        print("Decoded Obs: {}\n\n".format(decoded.shape))
+        # calculate loss
         loss_fn = nn.MSELoss(reduction='none')
         if type=="vector":
-            loss = loss_fn(post_state_seq, gt_observations).sum(dim=2).mean()  # last dimension is observation
+            loss = loss_fn(decoded, gt_observations).sum(dim=2).mean()  # last dimension is observation
         elif type=="image":
-            loss = loss_fn(post_state_seq, gt_observations).sum(dim=(2, 3, 4)).mean()  # last 3 dimensions are observation (3, 64, 64)
+            loss = loss_fn(decoded, gt_observations).sum(dim=(2, 3, 4)).mean()  # last 3 dimensions are observation (3, 64, 64)
         else:
             raise ValueError("Type must be image or vector.")
         return loss
@@ -122,7 +136,8 @@ class PlaNet(Agent):
         
     def learn_on_batch(self, batch) -> Dict:
         state_sequence = self._predict_state_sequence(batch)
-        observation_loss = self.observation_loss(self.type, batch["observations"], state_sequence["posterior"])
+        observations, goals, actions, rewards, dones = batch
+        observation_loss = self.observation_loss(self.type, observations, state_sequence["posterior"])
         kl_loss = self.kl_loss()  # TODO: arguments
         reward_loss = self.reward_loss(batch["rewards"], state_sequence["posterior"])
         loss = observation_loss + kl_loss + reward_loss
