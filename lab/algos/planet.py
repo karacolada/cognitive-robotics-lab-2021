@@ -42,9 +42,9 @@ class PlaNet(Agent):
         self.env_spaces = env_spaces
 
         if env_spaces["image_based"]:
-            type = "image"
+            self.type = "image"
         else:
-            type = "vector"
+            self.type = "vector"
 
         print(self.env_spaces)
 
@@ -52,17 +52,17 @@ class PlaNet(Agent):
             #self.dynamics_model = # TODO: Your latent dynamics model here
             raise NotImplementedError
         elif self.latent_dynamics_model == "ssm":
-            self.dynamics_model = StochasticModel(type, self.network_configs["min_std_dev"],
+            self.dynamics_model = StochasticModel(self.type, self.network_configs["min_std_dev"],
                                                   self.stoch_state_size, action_size, observation_size,
                                                   self.network_configs["observation_embedding_size"],
-                                                  self.network_configs["hidden_layer_sizes"])
+                                                  self.network_configs["hidden_layer_sizes"][0])
         elif self.latent_dynamics_model == "rnn":
             #self.dynamics_model = # TODO: Your latent dynamics model here
             raise NotImplementedError
         else:
             assert False
 
-        self.reward_model = RewardModel(self.stoch_state_size, self.network_configs["hidden_layer_sizes"])
+        self.reward_model = RewardModel(self.stoch_state_size, self.network_configs["hidden_layer_sizes"][0])
 
         self.planner = CEMPlanner(env_spaces["action_size"], self.planning_horizon, self.optimization_iters,
                                   self.candidates, self.top_candidates, self.dynamics_model, self.reward_model)
@@ -110,7 +110,11 @@ class PlaNet(Agent):
             loss = torch.max(0, loss-freenats)  # TODO: test
         return loss
 
-    def reward_loss(self, rewards, pred_rewards):
+    def reward_loss(self, rewards, post_states):
+        print(rewards)  # find out type - Tensor?
+        pred_rewards = None  # same type as rewards
+        # for post_state in post_states:
+        #     pred_rewards[r] = self.reward_model(post_state)
         loss_fn = nn.MSELoss(reduction='none')
         loss = loss_fn(rewards, pred_rewards)
         print("Dimension of reward loss: {}".format(loss.shape))
@@ -118,9 +122,9 @@ class PlaNet(Agent):
         
     def learn_on_batch(self, batch) -> Dict:
         state_sequence = self._predict_state_sequence(batch)
-        observation_loss = self.observation_loss(batch["observations"], state_sequence["posterior"])  # TODO: type arg
+        observation_loss = self.observation_loss(self.type, batch["observations"], state_sequence["posterior"])
         kl_loss = self.kl_loss()  # TODO: arguments
-        reward_loss = self.reward_loss()  # TODO: arguments
+        reward_loss = self.reward_loss(batch["rewards"], state_sequence["posterior"])
         loss = observation_loss + kl_loss + reward_loss
 
         losses = {"observation_loss": observation_loss.item(),
