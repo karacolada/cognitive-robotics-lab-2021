@@ -1,4 +1,4 @@
-buffer_size = 2
+buffer_size = 1000000
 
 [transition_relabeling]
 
