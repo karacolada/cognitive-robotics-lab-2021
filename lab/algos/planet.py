@@ -111,7 +111,10 @@ class PlaNet(Agent):
         return loss
 
     def reward_loss(self, rewards, pred_rewards):
-        raise NotImplementedError
+        loss_fn = nn.MSELoss(reduction='none')
+        loss = loss_fn(rewards, pred_rewards)
+        print("Dimension of reward loss: {}".format(loss.shape))
+        return loss
         
     def learn_on_batch(self, batch) -> Dict:
         state_sequence = self._predict_state_sequence(batch)
