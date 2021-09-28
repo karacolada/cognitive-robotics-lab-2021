@@ -123,9 +123,9 @@ class PlaNet(Agent):
     def reward_loss(self, rewards, post_state_seq):
         """Obtain rewards from posterior states, then compute loss"""
         rewards = rewards[1:]
-        # squeeze batch and timesteps
-        states = post_state_seq["stoch_state"].view(-1, self.stoch_state_size)
-        pred_rewards = self.reward_model(states)
+        # squeeze batch and timesteps (only for stoch_state - it's ugly...)
+        post_state_seq["stoch_state"] = post_state_seq["stoch_state"].view(-1, self.stoch_state_size)
+        pred_rewards = self.reward_model(post_state_seq)
         # reshape
         pred_rewards = pred_rewards.view(rewards.shape)
         # calculate loss
