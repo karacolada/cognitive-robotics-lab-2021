@@ -132,7 +132,7 @@ class PlaNet(Agent):
         loss = kl_divergence(prior, posterior).sum(dim=2).mean()
         if freenats:
             # loss from original planet implementation
-            loss = torch.max(torch.tensor(0.), loss-freenats)
+            loss = torch.max(torch.tensor(0.).to(self.device), loss-freenats)
         return loss
 
     def reward_loss(self, rewards, post_state_seq):
