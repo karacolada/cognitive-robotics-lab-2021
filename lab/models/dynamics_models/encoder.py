@@ -12,7 +12,6 @@ class VectorEncoder(nn.Module):
     # learn to embed observation
     def __init__(self, observation_size, embedded_size, hidden_size=None):
         super(VectorEncoder, self).__init__()
-        self.flatten = nn.Flatten
         if hidden_size is None:
             hidden_size = embedded_size
         self.linear_relu_stack = nn.Sequential(
@@ -24,7 +23,6 @@ class VectorEncoder(nn.Module):
         )
     
     def forward(self, observation):
-        observation = self.flatten(observation)
         embedded = self.linear_relu_stack(observation)
         return embedded
 
