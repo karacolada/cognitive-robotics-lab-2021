@@ -110,12 +110,14 @@ class PlaNet(Agent):
             raise ValueError("Type must be image or vector.")
         return loss
 
-    def kl_loss(self, prior_mean, prior_stddev, posterior_mean, posterior_stddev, freenats=None):
-        prior = Normal(prior_mean, prior_stddev)
-        posterior = Normal(posterior_mean, posterior_stddev)
-        loss = kl_divergence(prior, posterior)
+    def kl_loss(self, state_sequence, freenats=None):
+        # calculate loss
+        prior = Normal(state_sequence["prior"]["mean"], state_sequence["prior"]["stddev"])
+        posterior = Normal(state_sequence["posterior"]["mean"], state_sequence["posterior"]["stddev"])
+        loss = kl_divergence(prior, posterior).sum(dim=2).mean()
         if freenats:
-            loss = torch.max(0, loss-freenats)  # TODO: test
+            # loss from original planet implementation
+            loss = torch.max(torch.tensor(0.), loss-freenats)
         return loss
 
     def reward_loss(self, rewards, post_states):
@@ -132,9 +134,8 @@ class PlaNet(Agent):
         state_sequence = self._predict_state_sequence(batch)
         observations, goals, actions, rewards, dones = batch
         observation_loss = self.observation_loss(self.type, observations, state_sequence["posterior"])
+        kl_loss = self.kl_loss(state_sequence, self.free_nats)
 
-
-        kl_loss = self.kl_loss()  # TODO: arguments
         reward_loss = self.reward_loss(batch["rewards"], state_sequence["posterior"])
         loss = observation_loss + kl_loss + reward_loss
 
