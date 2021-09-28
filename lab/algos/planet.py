@@ -135,7 +135,7 @@ class PlaNet(Agent):
         
     def learn_on_batch(self, batch) -> Dict:
         state_sequence = self._predict_state_sequence(batch)
-        observations, goals, actions, rewards, dones = batch
+        observations, _, _, rewards, _ = batch
         observation_loss = self.observation_loss(self.type, observations, state_sequence["posterior"])
         kl_loss = self.kl_loss(state_sequence, self.free_nats)
         reward_loss = self.reward_loss(rewards, state_sequence["posterior"])
