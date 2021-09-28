@@ -19,13 +19,13 @@ class StochasticModel(LatentDynamicsModel):
 
     def _prior(self, prev_state, prev_action):
         """s_t ~ p(s_t | s_t-1, a_t-1)"""
-        mean, stddev = self.prior_model(prev_state, prev_action)
+        mean, stddev = self.prior_model(prev_state["stoch_state"], prev_action)
         state = torch.normal(mean, stddev)
         return state
 
     def _posterior(self, prev_state, prev_action, emb_observation):
         """s_t ~ q(s_t | s_t-1, a_t-1, e_t)"""
-        prior_mean, prior_stddev = self.prior_model(prev_state, prev_action)
+        prior_mean, prior_stddev = self.prior_model(prev_state["stoch_state"], prev_action)
         post_mean, post_stddev = self.posterior_model(prior_mean, prior_stddev, emb_observation)
         state = torch.normal(post_mean, post_stddev)
         return state
@@ -50,7 +50,7 @@ class StochasticPrior(nn.Module):
         )
     
     def forward(self, state, action):
-        input = torch.cat((state, action))
+        input = torch.cat((state, action), dim=1)
         output = self.linear_relu_stack(input)
         mean, stddev = output.chunk(2, dim=-1)
         stddev = nn.functional.softplus(stddev) + self.min_stddev
@@ -72,7 +72,7 @@ class StochasticPosterior(nn.Module):
         )
 
     def forward(self, prior_mean, prior_stddev, embedded):
-        input = torch.cat((prior_mean, prior_stddev, embedded))
+        input = torch.cat((prior_mean, prior_stddev, embedded), dim=1)
         output = self.linear_relu_stack(input)
         mean, stddev = output.chunk(2, dim=-1)
         stddev = nn.functional.softplus(stddev) + self.min_stddev
