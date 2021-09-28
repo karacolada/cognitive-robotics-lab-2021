@@ -120,14 +120,17 @@ class PlaNet(Agent):
             loss = torch.max(torch.tensor(0.), loss-freenats)
         return loss
 
-    def reward_loss(self, rewards, post_states):
-        print(rewards)  # find out type - Tensor?
-        pred_rewards = None  # same type as rewards
-        # for post_state in post_states:
-        #     pred_rewards[r] = self.reward_model(post_state)
+    def reward_loss(self, rewards, post_state_seq):
+        """Obtain rewards from posterior states, then compute loss"""
+        rewards = rewards[1:]
+        # squeeze batch and timesteps
+        states = post_state_seq["stoch_state"].view(-1, self.stoch_state_size)
+        pred_rewards = self.reward_model(states)
+        # reshape
+        pred_rewards = pred_rewards.view(rewards.shape)
+        # calculate loss
         loss_fn = nn.MSELoss(reduction='none')
-        loss = loss_fn(rewards, pred_rewards)
-        print("Dimension of reward loss: {}".format(loss.shape))
+        loss = loss_fn(rewards, pred_rewards).mean()
         return loss
         
     def learn_on_batch(self, batch) -> Dict:
@@ -135,8 +138,8 @@ class PlaNet(Agent):
         observations, goals, actions, rewards, dones = batch
         observation_loss = self.observation_loss(self.type, observations, state_sequence["posterior"])
         kl_loss = self.kl_loss(state_sequence, self.free_nats)
+        reward_loss = self.reward_loss(rewards, state_sequence["posterior"])
 
-        reward_loss = self.reward_loss(batch["rewards"], state_sequence["posterior"])
         loss = observation_loss + kl_loss + reward_loss
 
         losses = {"observation_loss": observation_loss.item(),
