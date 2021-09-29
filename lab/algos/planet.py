@@ -132,6 +132,7 @@ class PlaNet(Agent):
         prior = Normal(state_sequence["prior"]["mean"], state_sequence["prior"]["stddev"])
         posterior = Normal(state_sequence["posterior"]["mean"], state_sequence["posterior"]["stddev"])
         loss = kl_divergence(prior, posterior).sum(dim=2).mean()
+        #self.log("kl_loss_no_freenats", loss.item())
         if freenats:
             # loss from original planet implementation
             loss = torch.max(torch.tensor(0.).to(self.device), loss-freenats)
@@ -139,7 +140,7 @@ class PlaNet(Agent):
 
     def reward_loss(self, rewards, post_state_seq):
         """Obtain rewards from posterior states, then compute loss"""
-        rewards = rewards[1:]
+        rewards = rewards[:-1]
         pred_rewards = self.reward_model(post_state_seq)
         # reshape
         pred_rewards = pred_rewards.view(rewards.shape)
