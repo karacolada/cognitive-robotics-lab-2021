@@ -20,7 +20,7 @@ class StochasticModel(LatentDynamicsModel):
     def _prior(self, prev_state, prev_action):
         """s_t ~ p(s_t | s_t-1, a_t-1)"""
         mean, stddev = self.prior_model(prev_state["stoch_state"], prev_action)
-        state = torch.normal(mean, stddev)
+        state = mean + stddev*torch.randn_like(mean)  # sample from normal distribution
         return {"stoch_state": state, "mean": mean, "stddev": stddev}
 
     # possibly refactor the bit about priors?
@@ -28,7 +28,7 @@ class StochasticModel(LatentDynamicsModel):
         """s_t ~ q(s_t | s_t-1, a_t-1, e_t)"""
         prior_mean, prior_stddev = self.prior_model(prev_state["stoch_state"], prev_action)
         post_mean, post_stddev = self.posterior_model(prior_mean, prior_stddev, emb_observation)
-        state = torch.normal(post_mean, post_stddev)
+        state = post_mean + post_stddev*torch.randn_like(post_mean)  # sample from normal distribution
         return {"stoch_state": state, "mean": post_mean, "stddev": post_stddev}
 
     def dec(self, state):
