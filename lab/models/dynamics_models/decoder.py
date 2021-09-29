@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 def Decoder(type, observation_size, state_size, hidden_size=None):
@@ -14,8 +15,10 @@ class VectorDecoder(nn.Module):
         super(VectorDecoder, self).__init__()
         if hidden_size is None:
             hidden_size = observation_size
+        self.state_size = state_size
+        input_size = sum(state_size.values())
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(state_size, hidden_size),
+            nn.Linear(input_size, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
@@ -23,7 +26,8 @@ class VectorDecoder(nn.Module):
         )
     
     def forward(self, state):
-        observation = self.linear_relu_stack(state)
+        input = torch.cat([state[key] for key in self.state_size.keys()])
+        observation = self.linear_relu_stack(input)
         return observation
 
 class ImageDecoder(nn.Module):

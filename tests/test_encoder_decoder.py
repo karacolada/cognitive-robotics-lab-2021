@@ -31,7 +31,14 @@ enc = VectorEncoder(observation_size, embedded_size, hidden_size=300)
 embedded = enc(input)
 print("Size of embedded batch: {}".format(embedded.size()))
 
+state_size = {"stoch_state":30, "det_state":25}
+#state_size = {"det_state":25}
+#state_size = {"stoch_state":30}
+stoch_state = torch.randn(30)
+det_state = torch.randn(25)
+state = {"stoch_state":stoch_state, "det_state": det_state}
+
 dec = VectorDecoder(observation_size, state_size, hidden_size=300)
 
-observation = dec(embedded)
+observation = dec(state)
 print("Size of observed batch: {}".format(observation.size()))
