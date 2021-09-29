@@ -1,12 +1,15 @@
+import torch
 from torch import nn
 
 class RewardModel(nn.Module):
     def __init__(self, state_size, hidden_size=None):
         super().__init__()
+        self.state_size = state_size
+        input_size = sum(state_size.values())
         if hidden_size is None:
-            hidden_size = state_size
+            hidden_size = input_size
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(state_size, hidden_size),
+            nn.Linear(input_size, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
@@ -14,6 +17,6 @@ class RewardModel(nn.Module):
         )
     
     def forward(self, state):
-        # CAUTION: only works for stochastic state model!
-        reward = self.linear_relu_stack(state["stoch_state"])
+        input = torch.cat([state[key] for key in self.state_size.keys()], dim=1)  # concatenate per batch
+        reward = self.linear_relu_stack(input)
         return reward.view(-1)
