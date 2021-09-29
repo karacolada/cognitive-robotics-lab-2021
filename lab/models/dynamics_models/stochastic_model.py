@@ -23,6 +23,7 @@ class StochasticModel(LatentDynamicsModel):
         state = torch.normal(mean, stddev)
         return {"stoch_state": state, "mean": mean, "stddev": stddev}
 
+    # possibly refactor the bit about priors?
     def _posterior(self, prev_state, prev_action, emb_observation):
         """s_t ~ q(s_t | s_t-1, a_t-1, e_t)"""
         prior_mean, prior_stddev = self.prior_model(prev_state["stoch_state"], prev_action)
@@ -38,15 +39,15 @@ class StochasticPrior(nn.Module):
     def __init__(self, min_stddev, state_size, action_size, hidden_size=None):
         super().__init__()
         if hidden_size is None:
-            hidden_size = 2*state_size
-        self.input_size = state_size + action_size
+            hidden_size = 2*state_size["stoch_state"]
+        self.input_size = state_size["stoch_state"] + action_size
         self.min_stddev = min_stddev
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(self.input_size, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, 2*state_size)
+            nn.Linear(hidden_size, 2*state_size["stoch_state"])
         )
     
     def forward(self, state, action):
@@ -60,15 +61,15 @@ class StochasticPosterior(nn.Module):
     def __init__(self, min_stddev, state_size, embedded_size, hidden_size=None):
         super().__init__()
         if hidden_size is None:
-            hidden_size = 2*state_size
-        self.input_size = 2*state_size + embedded_size
+            hidden_size = 2*state_size["stoch_state"]
+        self.input_size = 2*state_size["stoch_state"] + embedded_size
         self.min_stddev = min_stddev
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(self.input_size, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, 2*state_size)
+            nn.Linear(hidden_size, 2*state_size["stoch_state"])
         )
 
     def forward(self, prior_mean, prior_stddev, embedded):

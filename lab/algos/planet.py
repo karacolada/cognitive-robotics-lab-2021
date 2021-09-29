@@ -62,20 +62,23 @@ class PlaNet(Agent):
             self.type = "vector"
 
         if self.latent_dynamics_model == "rssm":
+            state_size = {"stoch_state": self.stoch_state_size, "det_state": self.det_state_size}
             #self.dynamics_model = # TODO: Your latent dynamics model here
             raise NotImplementedError
         elif self.latent_dynamics_model == "ssm":
+            state_size = {"stoch_state": self.stoch_state_size}
             self.dynamics_model = StochasticModel(self.type, self.network_configs["min_std_dev"],
-                                                  self.stoch_state_size, action_size, observation_size,
+                                                  state_size, action_size, observation_size,
                                                   self.network_configs["observation_embedding_size"],
                                                   self.network_configs["hidden_layer_sizes"][0])
         elif self.latent_dynamics_model == "rnn":
+            state_size = {"det_state": self.det_state_size}
             #self.dynamics_model = # TODO: Your latent dynamics model here
             raise NotImplementedError
         else:
             assert False
 
-        self.reward_model = RewardModel(self.stoch_state_size, self.network_configs["hidden_layer_sizes"][0])
+        self.reward_model = RewardModel(state_size, self.network_configs["hidden_layer_sizes"][0])
 
         self.planner = CEMPlanner(env_spaces["action_size"], self.planning_horizon, self.optimization_iters,
                                   self.candidates, self.top_candidates, self.dynamics_model, self.reward_model)
@@ -109,11 +112,9 @@ class PlaNet(Agent):
         """Decode observations from post_state_seq.keys()=[stoch_state, mean, stddev], then compute loss"""
         # only t-1 states available, observations from [1]
         gt_observations = gt_observations[1:]
-        # squeeze batch+timesteps
-        states = post_state_seq["stoch_state"].view(-1, self.stoch_state_size)
         # get decoded observations
-        decoded = self.dynamics_model.dec(states)
-        # back to true dimensions
+        decoded = self.dynamics_model.dec(post_state_seq)
+        # set correct shape
         decoded = decoded.view(gt_observations.shape)
         # calculate loss
         loss_fn = nn.MSELoss(reduction='none')
