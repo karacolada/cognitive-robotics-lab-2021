@@ -26,14 +26,16 @@ class VectorDecoder(nn.Module):
         )
     
     def forward(self, state):
-        input = torch.cat([state[key] for key in self.state_size.keys()])
+        input = torch.cat([state[key] for key in self.state_size.keys()], dim=1)  # concatenate per batch
         observation = self.linear_relu_stack(input)
         return observation
 
 class ImageDecoder(nn.Module):
     def __init__(self, state_size):
         super(ImageDecoder, self).__init__()
-        self.prep = nn.Linear(state_size, 256)
+        self.state_size = state_size
+        self.input_size = sum(state_size.values())
+        self.prep = nn.Linear(self.input_size, 256)
         self.deconv_relu_stack = nn.Sequential(
             nn.ConvTranspose2d(256, 128, 5, 2),
             nn.ReLU(),
@@ -45,7 +47,10 @@ class ImageDecoder(nn.Module):
         )
     
     def forward(self, state):
-        hidden = self.prep(state)
+        input = torch.cat([state[key] for key in self.state_size.keys()], dim=1)  # concatenate per batch
+        # squeeze batch+timesteps
+        input = input.view(-1, self.input_size)
+        hidden = self.prep(input)
         hidden = hidden.view(-1, hidden.shape[1], 1, 1)
         observation = self.deconv_relu_stack(hidden)
         return observation
