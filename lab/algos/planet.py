@@ -22,7 +22,8 @@ class PlaNet(Agent):
                  optimizer: Dict, overshooting_distance: int, overshooting_kl_beta: float,
                  overshooting_reward_scale: float, planning_horizon: int, stoch_state_size: int,
                  top_candidates: int) -> None:
-        super(PlaNet, self).__init__(locals(), model_based=True)
+        # set model_based=True for image based
+        super(PlaNet, self).__init__(locals(), model_based=False)
         self.global_prior = Normal(torch.zeros(batch_size, stoch_state_size), torch.ones(batch_size, stoch_state_size))
 
         self.make_transition = ndarray_tuple("Transition", ["observation", "goal", "action", "reward", "done"])

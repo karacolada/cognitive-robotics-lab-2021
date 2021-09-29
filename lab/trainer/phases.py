@@ -154,8 +154,8 @@ def run_test_episodes(agent: Agent, env: Env, logger: Logger, run_id: int, disab
         log = ["reward"]
         if not disable_video_logging:
             log.append("video")
-            #if agent.model_based:
-            #    log.append("reconstruction")
+            if agent.model_based:
+                log.append("reconstruction")
         current_logs, _, _ = interact(agent, env, logger, phase="test", run_id=run_id, log=tuple(log))
         for key in current_logs.keys():
             if key not in logs.keys():
