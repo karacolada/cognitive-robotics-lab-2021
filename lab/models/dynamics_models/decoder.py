@@ -16,9 +16,9 @@ class VectorDecoder(nn.Module):
         if hidden_size is None:
             hidden_size = observation_size
         self.state_size = state_size
-        input_size = sum(state_size.values())
+        self.input_size = sum(state_size.values())
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
+            nn.Linear(self.input_size, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
@@ -27,6 +27,8 @@ class VectorDecoder(nn.Module):
     
     def forward(self, state):
         input = torch.cat([state[key] for key in self.state_size.keys()], dim=1)  # concatenate per batch
+        # squeeze batch+timesteps
+        input = input.view(-1, self.input_size)
         observation = self.linear_relu_stack(input)
         return observation
 
