@@ -133,6 +133,7 @@ def interact(agent: Agent, env: Env, logger: Logger, phase: str, run_id: int, tq
     return logs, observation, goal
 
 
+# to be faster/disable planning: same as seed phase for all
 def _select_action(agent: Agent, env: Env, observation: np.ndarray, goal: np.ndarray, t: int, phase) -> np.ndarray:
     if phase == "seed":
         action = env.sample_random_action()
