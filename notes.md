@@ -147,6 +147,8 @@ Similar to LSTM with forget gate, fewer parameters, no output gate. Does not mai
 
 Gates: Update (=Output), Reset (=Forget+Input), Current Memory (sub-part of reset gate)
 
+PyTorch: [`GRU`](https://pytorch.org/docs/stable/generated/torch.nn.GRU.html) (takes input and output as `(seq, batch, feature)`) and [`GRUCell`](https://pytorch.org/docs/stable/generated/torch.nn.GRUCell.html) (takes input and output of shape `(batch, input_size)`)
+
 ## Loss function
 
 ### observational loss
