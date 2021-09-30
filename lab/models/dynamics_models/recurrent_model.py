@@ -25,7 +25,10 @@ class RSSModel(LatentDynamicsModel):
 
     def _posterior(self, prev_state, prev_action, emb_observation):
         """s_t ~ q(s_t | h_t, e_t)"""
-        pass
+        prior = self._prior(prev_state, prev_action)
+        post_mean, post_stddev = self.posterior_model(prior["det_state"], emb_observation)
+        post_state = post_mean + post_stddev*torch.randn_like(post_mean)  # sample from normal distribution
+        return {"det_state": prior["det_state"], "stoch_state": post_state, "mean": post_mean, "stddev": post_stddev}
 
     def dec(self, state):
         """o_t ~ p(o_t | h_t, s_t)"""
@@ -55,3 +58,25 @@ class RSSMPrior(nn.Module):
         mean, stddev = output.chunk(2, dim=-1)
         stddev = nn.functional.softplus(stddev) + self.min_stddev
         return det_state, mean, stddev
+
+class RSSMPosterior(nn.Module):
+    def __init__(self, min_stddev, state_size, embedded_size, hidden_size=None):
+        super().__init__()
+        self.input_size = state_size["det_state"] + embedded_size
+        if hidden_size is None:
+            hidden_size = 2*state_size["stoch_state"]
+        self.min_stddev = min_stddev
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(self.input_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, 2*state_size["stoch_state"])
+        )
+
+    def forward(self, det_state, embedded):
+        input = torch.cat((det_state, embedded), dim=1)
+        output = self.linear_relu_stack(input)
+        mean, stddev = output.chunk(2, dim=-1)
+        stddev = nn.functional.softplus(stddev) + self.min_stddev
+        return mean, stddev
