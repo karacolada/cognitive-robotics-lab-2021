@@ -49,7 +49,8 @@ class ImageDecoder(nn.Module):
         )
     
     def forward(self, state):
-        input = torch.cat([state[key] for key in self.state_size.keys()], dim=1)  # concatenate per batch
+        # concatenate per batch+sequence (or only one of them when testing)
+        input = torch.cat([state[key] for key in self.state_size.keys()], dim=-1)
         # squeeze batch+timesteps
         input = input.view(-1, self.input_size)
         hidden = self.prep(input)

@@ -2,6 +2,7 @@ from torch.autograd import grad
 from lab import Agent
 from lab.models.planners.cross_entropy_method import CEMPlanner
 from lab.models.dynamics_models.stochastic_model import StochasticModel
+from lab.models.dynamics_models.recurrent_model import RSSModel
 from lab.models.dynamics_models.reward import RewardModel
 import numpy as np
 import torch
@@ -64,8 +65,10 @@ class PlaNet(Agent):
 
         if self.latent_dynamics_model == "rssm":
             state_size = {"stoch_state": self.stoch_state_size, "det_state": self.det_state_size}
-            #self.dynamics_model = # TODO: Your latent dynamics model here
-            raise NotImplementedError
+            self.dynamics_model = RSSModel(self.type, self.network_configs["min_std_dev"],
+                                           state_size, action_size, observation_size,
+                                           self.network_configs["observation_embedding_size"],
+                                           self.network_configs["hidden_layer_sizes"][0])
         elif self.latent_dynamics_model == "ssm":
             state_size = {"stoch_state": self.stoch_state_size}
             self.dynamics_model = StochasticModel(self.type, self.network_configs["min_std_dev"],

@@ -11,7 +11,7 @@ class RSSModel(LatentDynamicsModel):
         self.encoder = Encoder(type, observation_size, embedded_size)
         self.decoder = Decoder(type, observation_size, state_size, hidden_size)
         self.prior_model = RSSMPrior(min_stddev, state_size, action_size, hidden_size)
-        self.posterior_model = None
+        self.posterior_model = RSSMPosterior(min_stddev, state_size, embedded_size, hidden_size)
 
     def _enc(self, observation):
         """e_t = enc(o_t)"""
