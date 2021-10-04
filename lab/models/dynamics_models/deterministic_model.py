@@ -47,7 +47,7 @@ class DeterministicPrior(nn.Module):
         )
     
     def forward(self, state, action):
-        gru_out = self.gru_linear_relu_stack(action, state["det_state"])
+        gru_out = self.gru(action, state["det_state"])
         det_state = self.linear_relu_stack(gru_out)
         return det_state
 

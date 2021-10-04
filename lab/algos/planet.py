@@ -3,6 +3,7 @@ from lab import Agent
 from lab.models.planners.cross_entropy_method import CEMPlanner
 from lab.models.dynamics_models.stochastic_model import StochasticModel
 from lab.models.dynamics_models.recurrent_model import RSSModel
+from lab.models.dynamics_models.deterministic_model import DeterministicModel
 from lab.models.dynamics_models.reward import RewardModel
 import numpy as np
 import torch
@@ -77,8 +78,9 @@ class PlaNet(Agent):
                                                   self.network_configs["hidden_layer_sizes"][0])
         elif self.latent_dynamics_model == "rnn":
             state_size = {"det_state": self.det_state_size}
-            #self.dynamics_model = # TODO: Your latent dynamics model here
-            raise NotImplementedError
+            self.dynamics_model = DeterministicModel(self.type, state_size, action_size, observation_size,
+                                                     self.network_configs["observation_embedding_size"],
+                                                     self.network_configs["hidden_layer_sizes"][0])
         else:
             assert False
 
@@ -130,6 +132,11 @@ class PlaNet(Agent):
             raise ValueError("Type must be image or vector.")
         return loss
 
+    def det_loss(self, state_sequence):
+        loss_fn = nn.MSELoss(reduction='none')
+        loss = loss_fn(state_sequence["prior"]["det_state"], state_sequence["posterior"]["det_state"].detach()).sum(dim=2).mean()
+        return loss
+
     def kl_loss(self, state_sequence, freenats=None):
         # calculate loss
         prior = Normal(state_sequence["prior"]["mean"], state_sequence["prior"]["stddev"])
@@ -148,22 +155,25 @@ class PlaNet(Agent):
         # reshape
         pred_rewards = pred_rewards.view(rewards.shape)
         # calculate loss
-        loss_fn = nn.MSELoss(reduction='none')
-        loss = loss_fn(rewards, pred_rewards).mean()
+        loss_fn = nn.MSELoss()  # default 'mean'
+        loss = loss_fn(rewards, pred_rewards)
         return loss
         
     def learn_on_batch(self, batch) -> Dict:
         state_sequence = self._predict_state_sequence(batch)
         observations, _, _, rewards, _ = batch
         observation_loss = self.observation_loss(self.type, observations, state_sequence["posterior"])
-        kl_loss = self.kl_loss(state_sequence, self.free_nats)
+        if self.latent_dynamics_model == "rnn":
+            state_loss = self.det_loss(state_sequence)
+        else:
+            state_loss = self.kl_loss(state_sequence, self.free_nats)
         reward_loss = self.reward_loss(rewards, state_sequence["posterior"])
 
-        loss = observation_loss + kl_loss + reward_loss
+        loss = observation_loss + state_loss + reward_loss
 
         losses = {"observation_loss": observation_loss.item(),
                   "reward_loss": reward_loss.item(),
-                  "kl_loss": kl_loss.item()}
+                  "state_loss": state_loss.item()}
 
         self.optimizer.zero_grad()
         loss.backward()
