@@ -23,7 +23,7 @@ class PlaNet(Agent):
                  gradient_clip_val: float, latent_dynamics_model: str, network_configs: Dict, optimization_iters: int,
                  optimizer: Dict, overshooting_distance: int, overshooting_kl_beta: float,
                  overshooting_reward_scale: float, planning_horizon: int, stoch_state_size: int,
-                 top_candidates: int) -> None:
+                 top_candidates: int, detach_post: bool) -> None:
         # set model_based=True for image based, False o/w
         super(PlaNet, self).__init__(locals(), model_based=True)
         self.global_prior = Normal(torch.zeros(batch_size, stoch_state_size), torch.ones(batch_size, stoch_state_size))
@@ -38,6 +38,7 @@ class PlaNet(Agent):
         self.optimizer = optimizer
         self.batch_size = batch_size
         self.chunk_size = chunk_size
+        self.detach_post = detach_post
         # might be needed too
         self.action_noise = action_noise
         self.candidates = candidates
@@ -134,7 +135,10 @@ class PlaNet(Agent):
 
     def det_loss(self, state_sequence):
         loss_fn = nn.MSELoss(reduction='none')
-        loss = loss_fn(state_sequence["prior"]["det_state"], state_sequence["posterior"]["det_state"].detach()).sum(dim=2).mean()
+        if self.detach_post:
+            loss = loss_fn(state_sequence["prior"]["det_state"], state_sequence["posterior"]["det_state"].detach()).sum(dim=2).mean()
+        else:
+            loss = loss_fn(state_sequence["prior"]["det_state"], state_sequence["posterior"]["det_state"]).sum(dim=2).mean()
         return loss
 
     def kl_loss(self, state_sequence, freenats=None):

@@ -16,6 +16,7 @@ overshooting_reward_scale = 0  # Latent overshooting reward prediction weight fo
 planning_horizon = 12
 stoch_state_size = 30  # Stochastic state size of RSSM
 top_candidates = 100  # Number of top candidates to fit to in CEM
+detach_post = false
 
 [optimizer]
     type = "Adam"
